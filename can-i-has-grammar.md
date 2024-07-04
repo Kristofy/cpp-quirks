@@ -228,10 +228,50 @@ struct Point{
 # define
 # include
 
+# folds
+```cpp
+template<typename... Values>
+auto sum(Values... values)
+{
+    return (values + ...);
+}
+
+// c++20
+auto sum(auto... values){
+    return (values + ...);
+}
+```
+
+# auto auto
+
 # vector<bool> -> string_base<bool>
+```cpp
+
+vector<bool> v = {true, false, false};
+
+bool& x = v[1];
+
+
+basic_string<bool> v = {true, false, false};
+
+bool& x = v[1];
+x = true;
+```
 
 # Compiler specifics
 
 __builtin
 __gcc
 case ranges
+
+
+# UB
+```cpp
+bool is_intmax(int x){
+    if(x > x + 1) {
+        return true;
+    }
+    return false;
+}
+
+```
