@@ -3,39 +3,31 @@
 ## Table of contents
 
 - Bűbűjok / Spells
-
   - Inicializáció
-  - If utasítások
+  - Egyértelműsítés
+  - If / elágazások utasítás
   - For ciklusok
-  - Switch case
-  - Tömbök
-  - Disanbiguate
-  - Structured bindings
-
+  - Switch case / Többágú elágazás
 - varázsigék / Intermediate Incantations
-- Operátorok / alternatív tokenek
-- auto
-- macro define, stringify, include
-- Forward declaration
-- vector, pair, tuple, std::tie < op
+  - Az `auto` kulcsszó
+  - Alternatív tokenek
+  - Preprocessor / Makrók
 - Mesteri Varázslatok / Masterful Magic
-- Nem szabványos
-  - ternary (elvis)
-  - tömb inicializálás
-  - Compiler specifics
-- Legfelsőbb Mágia / Supreme Sorcery
-  - raw string + multiline
-  - folds
-  - vector<bool> -> string_base<bool>
-  - macro hibák () és do while
-  - a bunch of braces: Lambda
+  - Összehasonlítás lexikografikusan
+  - String escape karakterk + Raw string
+  - Intiger literálok
+  - vector<bool> csodái
+  - lambdák bevezető
 - Fekete mágia / Black Magic
-  - UB
-  - ternary
-  - vessző operátor vs vessző szeparátor
-  - Konstruktor - destruktor
+  - Tömb inicializálás
+  - Case ranges
+  - Elvis operátor
+  - Undefined behavior
+  - Intiger / unsigned overflow
+  - A típusok "nem" számítanak
+- Plusz
 
-# Szintaxis
+# Bűbűjok / Spells
 
 "Egyszerűbb" szintaxisbeli elemek
 
@@ -550,7 +542,7 @@ int main() {
 
 # Mesteri Varázslatok / Masterful Magic
 
-Összehasonlítás lexikografikusan
+## Összehasonlítás lexikografikusan
 
 ```cpp
     string s1 = "hello";
@@ -614,7 +606,7 @@ bool kisebb(Point a, Point b) {
 }
 ```
 
-Stringek és escape karakterek
+# Stringek és escape karakterek
 
 ```cpp
 cout << "Hello\nWorld";
@@ -698,30 +690,6 @@ bool& x = v[1];
 
 # Mesteri Varázslatok / Masterful Magic
 
-## Ternaly operator
-
-```cpp
-// Az "egysoros if"
-int a = 42;
-int b = (a == 42) ? 3 : 27;
-// Az igaz és hamis típusának pontosan egyeznie kell
-// Vagyis néha, nem mindig
-```
-
-Az operátor állhat az egyenlőség bal oldalán is, feltéve, hogy az igaz hamis ág típusai pontosan megegyeznek, és tudunk hozzájuk értéket rendelni. (refereciák)
-
-```cpp
-float a = -1.0f;
-int b;
-(false ? a : b) = 42; // nem egyenlő típusok
-
-(false ? 3 : 4) = 42; // nem referenciák, nem adhatunk értéket a 3-nak
-
-
-int c = 5;
-(a < 0.1f ? a : c) = 42; // Ez helyes
-```
-
 ## Literálok
 
 ### Pop quiz #5
@@ -761,6 +729,30 @@ int binary = 0b1010;
 int octal =  011230;
 int hex =    0x123f;
 int binary = 0b1010'1010'1010'1010'1010'1010'1010'1010;
+```
+
+## Ternaly operator
+
+```cpp
+// Az "egysoros if"
+int a = 42;
+int b = (a == 42) ? 3 : 27;
+// Az igaz és hamis típusának pontosan egyeznie kell
+// Vagyis néha, nem mindig
+```
+
+Az operátor állhat az egyenlőség bal oldalán is, feltéve, hogy az igaz hamis ág típusai pontosan megegyeznek, és tudunk hozzájuk értéket rendelni. (refereciák)
+
+```cpp
+float a = -1.0f;
+int b;
+(false ? a : b) = 42; // nem egyenlő típusok
+
+(false ? 3 : 4) = 42; // nem referenciák, nem adhatunk értéket a 3-nak
+
+
+int c = 5;
+(a < 0.1f ? a : c) = 42; // Ez helyes
 ```
 
 ## Lambdák (Opcionális)
@@ -925,38 +917,32 @@ Az egyetlen alkalom a do-while ciklusra
 
 # Fekete mágia / Black Magic
 
-- UB
-- vessző operátor vs vessző szeparátor
-- Tömbök
-- ternary (elvis)
-- tömb inicializálás
-- Compiler specifics
+## Tömb inicializálás
 
----
-
-# Switch
-
--- range based switch
-
-# Forward declaration
-
-```cpp
-void asdf(struct S* x);
-```
-
-# Array
-
--- Classified
+NEM standard c++, de majdnem mindenhol működik
 
 ```cpp
 // designated array initializer
-// This is clang specific
+// This only works in clang
 int arr[] = {
     [8] = 3,
     [5] = 2,
     [9] = 6
-}
+};
+```
 
+In GCC
+
+```cpp
+// Kötelezően sorban, 0-tól
+int arr[] = {
+    [0] = 1,
+    [1] = 2,
+    [2] = 3
+};
+```
+
+```cpp
 // In GCC you can only do this if the elements are in sequence from 0
 // The intented usecase
 enum nums {
@@ -974,33 +960,138 @@ int arr[] = {
 
 // This only works on clang :(
 int arr[12] = { [0 ... 12] = 3 };
+```
+
+## Case ranges
+
+```cpp
+int v = 2;
+char ch = 'd';
+
+switch(v)  {
+case 1:
+  cout << "one" << endl;
+  break;
+case 2 ... 3:
+  cout << "two or three" << endl;
+  break;
+default:
+  cout << "default" << endl;
+}
+
+
+switch (ch) {
+case 'a' ... 'z':
+  cout << "lowercase" << endl;
+  break;
+case 'A' ... 'Z':
+  cout << "uppercase" << endl;
+  break;
+}
+```
+
+## Elvis operátor
+
+```cpp
+// Ha egy random = 0, akkor -1 et adjunk, vissza egyébként a számot
+
+int test_random() {
+    if (rand() == 0) {
+        return rand();
+    } else {
+        return -1;
+    }
+}
+
+// rand() egy beépített (c) függvény a stdlib.h-ból
+// 0 -tól RAND_MAX (32767) -ig ad vissza egy random int-et
 
 ```
 
-# Macros and preprocessing advanced
+```cpp
+int test_random() {
+    if (auto x = rand(); x == 0) {
+        return x;
+    } else {
+        return -1;
+    }
+}
+```
 
-# auto auto
+```cpp
+int test_random() {
+    auto x = rand();
+    return x ? x : 0;
+}
+```
+
+Az elvis operátor
+Továbbra sem standard, de mindenhol működik
+
+```cpp
+int test_random() {
+    return rand() ?: 0;
+}
+```
+
+### Pop quiz #8
+
+```cpp
+int main() {
+    int x = 1;
+    int y = x+++++x;
+    cout << y;
+}
+```
+
+Mi y értéke?
+
+## Undefined behavior
+
+Tipikusan 4, de nem kötelező
+
+```cpp
+void print(int a, int b) {
+    cout << a << ' ' << b << '\n';
+}
+
+int main() {
+    int x = 1;
+    int y = x++  + ++x;
+    cout << y << '\n';
+    // y
+    // GCC szerint 4
+    // Clang szerint 4
+
+    x = 1;
+    print(x++, ++x);
+    // GCC szerint 2 3
+    // Clang szerint 1 3
+}
+```
+
+vessző operátor vs vessző szeparátor
 
 ```cpp
 
-vector<bool> v = {true, false, false};
-
-bool& x = v[1];
-
-
-basic_string<bool> v = {true, false, false};
-
-bool& x = v[1];
-x = true;
+int a = 1;
+int x = 1;
+a = x++, ++x; // Ez jól definiált, balról jobbra
+cout << a; // 1
 ```
 
-# Compiler specifics
+Jól definiált de rosszul zárójelezett
+A `,` operátor a legkisebb precedenciájú operátor
 
-**builtin
-**gcc
-case ranges
+```cpp
 
-# UB
+int a = 1;
+int x = 1;
+a = (x++, ++x); // Ez jól definiált, balról jobbra
+cout << a; // 3
+```
+
+## Intiger overflow
 
 ```cpp
 bool is_intmax(int x){
@@ -1010,42 +1101,71 @@ bool is_intmax(int x){
     return false;
 }
 
+
+int main() {
+    cout << is_intmax(1) << '\n';
+    cout << is_intmax(INT_MAX) << '\n';
+}
 ```
 
-# a bunch of braces: Lambda
+### Pop quiz #9
 
-# Strings 'R'
+Mi lesz az eredménye?
 
-# Macros, macro pitfalls
+Az int overflow az unsigned int-el ellentétben undefined behavior
 
-and casting to cheat
+Ez azt jelenti, hogy a fordíttó feltételezi, hogy nem történik meg
+
+```cpp
+// Így x < x + 1 mindig igaz
+// És a fordító ez ki optimalizálja
+bool is_intmax(int x){
+    if(x > x + 1) {
+        return true;
+    }
+    return false;
+}
+
+bool is_intmax(int x){
+    return false;
+}
+```
+
+## Unsigned intiger over / underflow
+
+```cpp
+for (unsigned i = 10; i >= 0; i--) {
+    cout << i << ' ';
+    }
+```
+
+### Pop quiz #10
+
+Mi a hiba?
+
+```cpp
+for (unsigned i = 10; ~i; i--) {
+    cout << i << ' ';
+}
+```
+
+## Structured binding "trick"
 
 ```cpp
 // tuple, pair, and any aggretate (custom struct)
 
 // vector "cannot be destructued"
 vector<int> v = {1, 2, 3, 4, 5}
-    // note the reversed parameter order
-  auto[three, two, one] = *(tuple<int, int, int>*)(v.data());
-  auto[three, two, one] = take<3>(v);
+// note the reversed parameter order
+
+auto[three, two, one] = *(tuple<int, int, int>*)(v.data());
+
+
+auto[three, two, one] = take<3>(v); // Az implementáció linkelve
 
 ```
 
-# Ternaly operator
-
-```cpp
-
-// Returns a reference
-// We can assign to it
-
-
-// Non-conform c++
-/// "The elvis operator"
-  auto f = [](auto x) {
-    return x + 1;
-  };
-  cout << (f(1) ?: 0) << endl;
-```
+# More
 
 Other interesting but harder
 remaining keyword c++20
@@ -1103,22 +1223,6 @@ volatile
 
 https://en.cppreference.com/w/cpp/language/decltype + decltype(auto)
 https://en.cppreference.com/w/cpp/language/fold
-
-# folds
-
-```cpp
-template<typename... Values>
-auto sum(Values... values)
-{
-    return (values + ...);
-}
-
-// c++20
-auto sum(auto... values){
-    return (values + ...);
-}
-```
-
 https://en.cppreference.com/w/cpp/language/parameter_pack
 https://en.cppreference.com/w/cpp/language/lambda
 take C style arrays as reference to a function without it decaying to a pointer
