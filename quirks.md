@@ -1,3 +1,155 @@
+# C++ Quirks
+
+## Table of contents
+
+- Szintaxis
+  - Inicializáció
+  - If utasítások
+  - For ciklusok
+  - Switch case
+  - Tömbök
+  - Konstruktor - destruktor
+  - Operátorok / alternatív tokenek
+  - auto
+  - Forward declaration
+  - ternary
+  - macro define, stringify, include
+  - Structured bindings
+  - Disanbiguate
+  - vector, pair, tuple, std::tie < op
+- Nem szabványos
+  - ternary (elvis)
+  - tömb inicializálás
+  - Compiler specifics
+- Halandó
+  - raw string + multiline
+  - folds
+  - vector<bool> -> string_base<bool>
+  - macro hibák () és do while
+  - a bunch of braces: Lambda
+- Fekete mágia
+  - UB
+  - vessző operátor vs vessző szeparátor
+
+# Szintaxis
+
+"Egyszerűbb" szintaxisbeli elemek
+
+## Inicializáció
+
+```cpp
+int foo() {
+    int x;
+    return x;
+}
+```
+
+- Jó kis random szám generátor
+- Valójában nem definiált viselkedés
+- A fordíttó akár teljesen el is távolíthatja a változót
+
+### Pop quiz #1
+
+Melyik változók értéke NEM 0?
+
+```cpp
+int a;
+
+int b = 0;
+int c = {0};
+int d = {};
+
+int e();
+int f{};
+int g(0);
+int h{0};
+
+int (i);
+int ((j));
+int (((k)));
+
+int l = false;
+
+int main() {
+    int m;
+}
+```
+
+---
+
+```cpp
+int a;
+
+int b = 0;
+int c = {0};
+int d = {};
+
+int e(); // Ez egy függvény deklaráció
+int f{};
+int g(0);
+int h{0};
+
+int (i);
+int ((j));
+int (((k))); // Ez nem fordul le
+
+int l = false;
+
+int main() {
+    int m;
+}
+```
+
+# If / elágazások utasítás
+
+# Disanbiguate
+
+```cpp
+
+struct point {};
+pair<int, int> point;
+
+point p;
+
+
+class point p;
+
+
+class vector<class pair<int, int>>;
+
+
+```
+
+- Inicializáció
+- If utasítások
+- For ciklusok
+- Switch case
+- Tömbök
+- Konstruktor - destruktor
+- Operátorok / alternatív tokenek
+- auto
+- Forward declaration
+- ternary
+- macro define, stringify, include
+- Structured bindings
+- Disanbiguate
+- vector, pair, tuple, std::tie < op
+- Nem szabványos
+  - ternary (elvis)
+  - tömb inicializálás
+  - Compiler specifics
+- Halandó
+  - raw string + multiline
+  - folds
+  - vector<bool> -> string_base<bool>
+  - macro hibák () és do while
+  - a bunch of braces: Lambda
+- Fekete mágia
+  - UB
+  - vessző operátor vs vessző szeparátor
+
+---
+
 # If statements
 
 ```cpp
@@ -18,9 +170,8 @@ if(false; true) {
 if(; true) {
 
 }
- 
-```
 
+```
 
 ```cpp
 if constexpr (false) {
@@ -29,7 +180,6 @@ if constexpr (false) {
 } else {
 
 }
-
 ```
 
 # For loops
@@ -70,6 +220,7 @@ for(auto&[key, value] : mp) {
 # Structured bindings
 
 and casting to cheat
+
 ```cpp
 // tuple, pair, and any aggretate (custom struct)
 
@@ -81,40 +232,8 @@ vector<int> v = {1, 2, 3, 4, 5}
 
 ```
 
-# Initialization
-```cpp
-int a = 0;
-int b = {0};
-int c = {};
-int d(0);
-int e{0};
-
-
-int f; // in static scope
-
-int (g);
-int ((h));
-int (((((((((g)))))))));
-```
-
-# Disanbiguate
-
-```cpp
-
-struct point {};
-pair<int, int> point;
-
-point p;
-
-
-class point p;
-
-
-class vector<class pair<int, int>>;
-
-
-```
 # Ternaly operator
+
 ```cpp
 
 // Returns a reference
@@ -130,8 +249,8 @@ class vector<class pair<int, int>>;
 
 ```
 
-
 # Switch lifeteme
+
 -- range based switch
 
 # Forward declaration
@@ -139,7 +258,6 @@ class vector<class pair<int, int>>;
 ```cpp
 void asdf(struct S* x);
 ```
-
 
 # Array
 
@@ -176,19 +294,20 @@ int arr[12] = { [0 ... 12] = 3 };
 
 # Constructor - destructor
 
-
 constexpr constructor
+
 ```cpp
 
 ```
 
 psudeo destructor
+
 ```cpp
 int i; // int is a type specifier, not a type name
 i.~int(); // This wont compile, but
 
 using foo = int;
-i.~foo(); 
+i.~foo();
 
 
 // You can just sprinkle in ~int(); as a function definition
@@ -204,7 +323,6 @@ Point p;
 p.~Point();
 
 ```
-
 
 # Alternative tokens
 
@@ -222,13 +340,14 @@ struct Point{
 
 ```
 
-
-
 # Macros and preprocessing
+
 # define
+
 # include
 
 # folds
+
 ```cpp
 template<typename... Values>
 auto sum(Values... values)
@@ -245,6 +364,7 @@ auto sum(auto... values){
 # auto auto
 
 # vector<bool> -> string_base<bool>
+
 ```cpp
 
 vector<bool> v = {true, false, false};
@@ -260,12 +380,12 @@ x = true;
 
 # Compiler specifics
 
-__builtin
-__gcc
+**builtin
+**gcc
 case ranges
 
-
 # UB
+
 ```cpp
 bool is_intmax(int x){
     if(x > x + 1) {
@@ -275,3 +395,11 @@ bool is_intmax(int x){
 }
 
 ```
+
+# vector, pair, tuple, std::tie < op
+
+# a bunch of braces: Lambda
+
+# Strings 'R'
+
+# Macros, macro pitfalls
