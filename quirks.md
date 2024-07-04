@@ -903,25 +903,6 @@ sort(v.begin(), v.end(), [](pair<int, int> a, pair<int, int> b) {
 
 ---
 
-```cpp
-// This is c++20
-auto add = [&]<class T>(T a, auto&&... as) -> decltype(auto) { return (a + ... + as);};
-
-int sum = add(1, 2, 3, 4, 5);
-cout << sum;
-
-int sum1 = [&]<class T>(T a, auto&&... as) -> decltype(auto) { return (a + ... + as);}(1, 2, 3, 4, 5);
-
-
-// in c++17
-auto add = [&](auto a, auto&&... as) -> decltype((a + ... + as)) { return (a + ... + as);};
-
-```
-
-Nagyon bonyolultakat is tudunk csinálni
-
----
-
 Macros
 
 ```cpp
