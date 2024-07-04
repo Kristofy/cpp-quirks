@@ -18,7 +18,7 @@
 - macro define, stringify, include
 - Forward declaration
 - vector, pair, tuple, std::tie < op
-- Mesteri Varázslat / Masterful Magic
+- Mesteri Varázslatok / Masterful Magic
 - Nem szabványos
   - ternary (elvis)
   - tömb inicializálás
@@ -426,34 +426,293 @@ switch (k) {
 }
 ```
 
-#
+# varázsigék / Intermediate Incantations
 
-- auto
-- Operátorok / alternatív tokenek
-- Forward declaration
+## Az `auto` kulcsszó
+
+```cpp
+    int a = 42;
+    auto b = a;
+
+    vector<int> v = {1, 2, 3, 4, 5};
+    auto v2 = {1, 2, 3, 4, 5}; // Ez nem egy vector
+    auto v3 = vector<int>{1, 2, 3, 4, 5}; // Ez egy vector
+    auto v4 = vector{1, 2, 3, 4, 5}; // Ez egy vector
+```
+
+```cpp
+auto add(int a, int b) {
+    return a + b;
+}
+
+auto a = add(1, 2);
+```
+
+```cpp
+auto add(auto a, auto b) {
+    return a + b;
+}
+
+string s1 = "hello";
+string s2 = "world";
+auto b = add(s1, s2);
+```
+
+## Alternatív tokenek
+
+A teljes [lista](https://en.cppreference.com/w/cpp/language/operator_alternative)
+
+```cpp
+bool visited = false;
+if(not visited) {
+    // ...
+}
+
+bool seen = false;
+if(seen or visited) {
+
+}
+
+// A bit műveletekre is van alternatív token
+// pl
+int x = 2 | 1;
+int y = 2 bitor 1;
+
+```
+
+### Pop quiz #3
+
+Mire használjuk az alternatív tokeneket?
+
+```cpp
+// természetesen semmi hasznosra
+
+// referencia típusokra
+vector v = {1, 2, 3, 4, 5};
+
+for (int bitand i : v) {
+    cout << i << ' ';
+    i++;
+}
+```
+
+```cpp
+vector v = <% 1, 2, 3, 4, 5 %>;
+
+for (int i = 0; i < v.size();i++) <%
+  cout << i << "th element: " << v<:i:> << endl;
+%>
+```
+
+## Preprocessor / Makrók
+
+```cpp
+#define PI 3.1415
+
+cout << PI;
+```
+
+```cpp
+#define PI 3.1415 + 0.0001
+
+cout << 3*PI;
+```
+
+```cpp
+#define PI 3.1415 + 0.0001
+
+cout << 3*3.1415 + 0.0001;
+```
+
+Erről csak később, ha lesz rá idő
+
+```cpp
+// Makróknak lehetnek paraméterei
+// sőt akár tetszőleges számú
+#define SUM(a, b) a + b
+#define PRINT_ALL(...) ...
+```
+
+Include szöveg behelyettesítés fileból
+
+```cpp
+// "closing.h"
+}
+```
+
+```cpp
+int main() {
+
+    return 0;
+
+#include "closing.h"
+```
+
+# Mesteri Varázslatok / Masterful Magic
+
+Összehasonlítás lexikografikusan
+
+```cpp
+    string s1 = "hello";
+    string s2 = "world";
+
+    cout << (s1 < s2);
+```
+
+```cpp
+    vector<int> v = {1, 2, 3, 4};
+    vector<int> v2 = {1, 2, 3, 5, 1};
+
+    cout << (v < v2);
+```
+
+```cpp
+    pair<int, int> p = {1, 2};
+    pair<int, int> p2 = {1, 3};
+
+    tuple<int, string, float> t = {1, "hello", 3.14};
+    tuple<int, string, float> t2 = {1, "world", 3.14};
+
+    cout << (p < p2);
+    cout << (t < t2);
+```
+
+Saját összehasonlítást tudunk ezzel írni
+
+```cpp
+Struct Point {
+    int x, y, z;
+};
+
+bool kisebb(Point a, Point b) {
+    return (a.x < b.x) or (a.x == b.x and a.y < b.y) or (a.x == b.x and a.y == b.y and a.z < b.z);
+}
+```
+
+```cpp
+struct Point {
+    int x, y, z;
+};
+
+bool kisebb(Point a, Point b) {
+    tuple t1 = {a.x, a.y, a.z};
+    tuple t2 = {b.x, b.y, b.z};
+    return a.x < b.x;
+}
+```
+
+Ez így rendben van, de ha nem int, name string lenne, akkor?
+Ez itt mind másolás így string vagy vector esetén lassebb lenne
+
+```cpp
+struct Point {
+    int x, y, z;
+};
+
+bool kisebb(Point a, Point b) {
+    return tie(a.x, a.y, a.z) < tie(b.x, b.y, b.z);
+}
+```
+
+Stringek és escape karakterek
+
+```cpp
+cout << "Hello\nWorld";
+cout << "Hello\tWorld";
+
+// Ha \n-t akarunk kiírni
+cout << "Hello\\nWorld";
+
+// Valójában minden \-t kétszer
+```
+
+Raw string
+
+```cpp
+cout << R"(Hello\nWorld)";
+// kiír: Hello\nWorld
+
+// A sima stringgel elentétben még többsoros is lehet
+string s = R"(Hello
+World
+How
+are
+you?)";
+```
+
+### Pop quiz #4
+
+Tegyük fel hogy nem tudtuk hogy így is lehet több soros stringet csinálni, hogyan csináltuk volna?
+
+```cpp
+string s = "Hello\nWorld\nHow\nare\nyou?";
+```
+
+```cpp
+string s =  "Hello\n"
+          + "World\n"
+          + "How\n"
+          + "are\n"
+          + "you?";
+```
+
+````
+
+```cpp
+string s = "Hello\n"
+           "World\n"
+           "How\n"
+           "are\n"
+           "you?";
+````
+
+## vector<bool> csodái
+
+```cpp
+// egy bool 1 byte de csak 1 bitet használ
+// így a vector<bool> ra optimalizált megoldást használnak
+// ahol 1 biten tárolják, viszont cserébe nem bool okat tartalmaz
+
+// Ez szinte sosem probléma
+vector<bool> v = {true, false, false};
+v[1] = true;
+for (bool b : v) {
+    cout << b << ' ';
+}
+// Minden működik, kivétel
+bool& x = v[1]; // Ez nem fordul le
+
+// Bárcsak lenne egy vectorhoz hasonló konténer
+// ami elemeket tárol és tud nőni
+```
+
+```cpp
+string s = "Hello";
+char& c = s[1];
+
+basic_string<bool> v = {true, false, false};
+bool& x = v[1];
+```
+
+- ternary (elvis)
+- tömb inicializálás
+- Compiler specifics
 - ternary
-- macro define, stringify, include
+- folds
+- Forward declaration
+- Konstruktor - destruktor
+- macro hibák () és do while
+- a bunch of braces: Lambda
+- trailing return
+- UB
+- vessző operátor vs vessző szeparátor
 - Structured bindings
-- vector, pair, tuple, std::tie < op
-- Nem szabványos
-  - ternary (elvis)
-  - tömb inicializálás
-  - Compiler specifics
-- Halandó
-  - raw string + multiline
-  - folds
-  - vector<bool> -> string_base<bool>
-  - Konstruktor - destruktor
-  - macro hibák () és do while
-  - a bunch of braces: Lambda
-- Fekete mágia
-  - UB
-  - vessző operátor vs vessző szeparátor
-  - Tömbök
+- Tömbök
+- return of decltype(auto)
 
 ---
 
-# Switch lifeteme
+# Switch
 
 -- range based switch
 
@@ -496,59 +755,7 @@ int arr[12] = { [0 ... 12] = 3 };
 
 ```
 
-# Constructor - destructor
-
-constexpr constructor
-
-```cpp
-
-```
-
-psudeo destructor
-
-```cpp
-int i; // int is a type specifier, not a type name
-i.~int(); // This wont compile, but
-
-using foo = int;
-i.~foo();
-
-
-// You can just sprinkle in ~int(); as a function definition
-// bitwise int constructed;
-
-
-class Point() {
-    ~Point() {
-    }
-}
-
-Point p;
-p.~Point();
-
-```
-
-# Alternative tokens
-
-```cpp
-
-struct Point{
-    compl Point() {
-
-    }
-};
-
-// and, or, bitand, bitor;
-
-// alternative tokens for references
-
-```
-
-# Macros and preprocessing
-
-# define
-
-# include
+# Macros and preprocessing advanced
 
 # folds
 
@@ -566,8 +773,6 @@ auto sum(auto... values){
 ```
 
 # auto auto
-
-# vector<bool> -> string_base<bool>
 
 ```cpp
 
