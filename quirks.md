@@ -626,7 +626,7 @@ cout << "Hello\\nWorld";
 // Valójában minden \-t kétszer
 ```
 
-Raw string
+[Raw string literals](https://en.cppreference.com/w/cpp/language/string_literal)
 
 ```cpp
 cout << R"(Hello\nWorld)";
@@ -637,7 +637,7 @@ string s = R"(Hello
 World
 How
 are
-you?)";
+"you"?)";
 ```
 
 ### Pop quiz #4
@@ -656,15 +656,17 @@ string s =  "Hello\n"
           + "you?";
 ```
 
-````
+Sajnos ez nem fordul le
 
 ```cpp
-string s = "Hello\n"
-           "World\n"
-           "How\n"
-           "are\n"
-           "you?";
-````
+using namespace std::literals;
+
+string s =  "Hello\n"s
+          + "World\n"
+          + "How\n"
+          + "are\n"
+          + "you?";
+```
 
 ## vector<bool> csodái
 
@@ -694,21 +696,241 @@ basic_string<bool> v = {true, false, false};
 bool& x = v[1];
 ```
 
+# Mesteri Varázslatok / Masterful Magic
+
+## Ternaly operator
+
+```cpp
+// Az "egysoros if"
+int a = 42;
+int b = (a == 42) ? 3 : 27;
+// Az igaz és hamis típusának pontosan egyeznie kell
+// Vagyis néha, nem mindig
+```
+
+Az operátor állhat az egyenlőség bal oldalán is, feltéve, hogy az igaz hamis ág típusai pontosan megegyeznek, és tudunk hozzájuk értéket rendelni. (refereciák)
+
+```cpp
+float a = -1.0f;
+int b;
+(false ? a : b) = 42; // nem egyenlő típusok
+
+(false ? 3 : 4) = 42; // nem referenciák, nem adhatunk értéket a 3-nak
+
+
+int c = 5;
+(a < 0.1f ? a : c) = 42; // Ez helyes
+```
+
+## Literálok
+
+### Pop quiz #5
+
+Mi a típusa az alábbi változóknak?
+
+```cpp
+auto a = 1;
+auto b = 1u;
+auto c = 1U;
+auto c = 1LL;
+auto d = 1.0;
+auto e = 1.0f;
+auto f = 1e9 + 7;
+```
+
+### Pop quiz #6
+
+Mennyi a + b + c?
+
+```cpp
+int a = 001;
+int b = 010;
+int c = 100;
+cout << a + b + c;
+```
+
+---
+
+109
+
+[Int literálok](https://en.cppreference.com/w/cpp/language/integer_literal)
+
+```cpp
+int large = 1'000'000;
+int binary = 0b1010;
+int octal =  011230;
+int hex =    0x123f;
+int binary = 0b1010'1010'1010'1010'1010'1010'1010'1010;
+```
+
+## Lambdák (Opcionális)
+
+```cpp
+// This is c++20
+auto add = [&]<class T>(T a, auto&&... as) -> decltype(auto) { return (a + ... + as);};
+
+int sum = add(1, 2, 3, 4, 5);
+cout << sum;
+
+int sum1 = [&]<class T>(T a, auto&&... as) -> decltype(auto) { return (a + ... + as);}(1, 2, 3, 4, 5);
+
+
+// in c++17
+auto add = [&](auto a, auto&&... as) -> decltype((a + ... + as)) { return (a + ... + as);};
+
+```
+
+```cpp
+auto cmp = [](pair<int, int> a, pair<int, int> b) {
+    return a.second < b.second;
+};
+
+// Ugyan az mint
+
+bool cmp(pair<int, int> a, pair<int, int> b) {
+    return a.second < b.second;
+}
+
+vector<pair<int, int>> v = {{1, 2}, {3, 4}, {5, 6}};
+sort(v.begin(), v.end(), [](pair<int, int> a, pair<int, int> b) {
+    return a.second < b.second;
+});
+```
+
+Macros
+
+```cpp
+#define LOG(x) cout << x << '\n'
+
+int main() {
+    int k = 42;
+    LOG(k);
+    return 0;
+}
+```
+
+```cpp
+#define LOG(x) cout << x << '\n'
+
+int main() {
+    int k = 42;
+    LOG(k << 1);
+    return 0;
+}
+```
+
+```cpp
+#define LOG(x) cout << (x) << '\n'
+#define L(X) cout << #x << (x) << '\n';
+
+int main() {
+    string s = "hello";
+    L(s);
+
+    return 0;
+}
+```
+
+Több "soros" makró
+
+```cpp
+#define LOG(x) cout << "{: "; cout << (x); cout << " :}\n";
+
+// Lehet így is:
+#define LOG(x) cout << "{: "; \
+cout << (x); \
+cout << " :}\n";
+```
+
+### Pop quiz #7
+
+Hogyan tudunk kitolni magunkal egy ilyen makróval?
+
+```cpp
+#define LOG(x) cout << "{: "; cout << (x); cout << " :}\n";
+
+int main() {
+    int k = 42
+    if (k == 42) {
+        LOG(k);
+    }
+
+    for(int i = 0; i < 10; i++) LOG(i);
+
+    return 0;
+}
+```
+
+Írhatunk köré egy scope-ot mint a case-eknél a switch-ben
+
+```cpp
+#define LOG(x) {cout << "{: "; cout << (x); cout << " :}\n"};
+
+int main() {
+    for(int i = 0; i < 10; i++) LOG(i);
+
+    return 0;
+}
+```
+
+Látszólag működik, kivétel ha
+
+```cpp
+#define LOG(x) {cout << "{: "; cout << (x); cout << " :}\n";}
+
+int main() {
+    int k = 10;
+    if (k == 10)
+        LOG(k); // Ez itt syntax error
+    else
+        cout << "Not 10\n";
+
+    return 0;
+}
+```
+
+```cpp
+int main() {
+    int k = 10;
+    if (k == 10)
+        {cout << "{: "; cout << (x); cout << " :}\n";};
+    else
+        cout << "Not 10\n";
+
+    return 0;
+}
+```
+
+```cpp
+int main() {
+    int k = 10;
+    if (k == 10) {
+        cout << "{: ";
+        cout << (x);
+        cout << " :}\n";
+    }; else
+        cout << "Not 10\n";
+
+    return 0;
+}
+```
+
+Az egyetlen alkalom a do-while ciklusra
+
+```cpp
+#define LOG(x) do {cout << "{: "; cout << (x); cout << " :}\n";} while(0)
+```
+
+Így már minden esetben helyes
+
+# Fekete mágia / Black Magic
+
+- UB
+- vessző operátor vs vessző szeparátor
+- Tömbök
 - ternary (elvis)
 - tömb inicializálás
 - Compiler specifics
-- ternary
-- folds
-- Forward declaration
-- Konstruktor - destruktor
-- macro hibák () és do while
-- a bunch of braces: Lambda
-- trailing return
-- UB
-- vessző operátor vs vessző szeparátor
-- Structured bindings
-- Tömbök
-- return of decltype(auto)
 
 ---
 
@@ -757,21 +979,6 @@ int arr[12] = { [0 ... 12] = 3 };
 
 # Macros and preprocessing advanced
 
-# folds
-
-```cpp
-template<typename... Values>
-auto sum(Values... values)
-{
-    return (values + ...);
-}
-
-// c++20
-auto sum(auto... values){
-    return (values + ...);
-}
-```
-
 # auto auto
 
 ```cpp
@@ -805,15 +1012,11 @@ bool is_intmax(int x){
 
 ```
 
-# vector, pair, tuple, std::tie < op
-
 # a bunch of braces: Lambda
 
 # Strings 'R'
 
 # Macros, macro pitfalls
-
-# Structured bindings
 
 and casting to cheat
 
@@ -842,5 +1045,80 @@ vector<int> v = {1, 2, 3, 4, 5}
     return x + 1;
   };
   cout << (f(1) ?: 0) << endl;
-
 ```
+
+Other interesting but harder
+remaining keyword c++20
+
+```cpp
+alignas
+alignof
+asm
+catch
+concept (C++20)
+const
+consteval (C++20)
+constexpr
+constinit (C++20)
+const_cast
+co_await (C++20)
+co_return (C++20)
+co_yield (C++20)
+decltype
+delete
+dynamic_cast
+enum
+explicit
+export
+extern
+friend
+goto
+inline
+mutable
+namespace
+new
+noexcept
+operator
+register
+reinterpret_cast
+requires (C++20)
+sizeof
+static
+static_assert
+static_cast
+template
+thread_local
+throw
+try
+typedef
+typeid
+typename
+union
+using
+virtual
+volatile
+```
+
+[keywords](https://en.cppreference.com/w/cpp/keyword)
+
+https://en.cppreference.com/w/cpp/language/decltype + decltype(auto)
+https://en.cppreference.com/w/cpp/language/fold
+
+# folds
+
+```cpp
+template<typename... Values>
+auto sum(Values... values)
+{
+    return (values + ...);
+}
+
+// c++20
+auto sum(auto... values){
+    return (values + ...);
+}
+```
+
+https://en.cppreference.com/w/cpp/language/parameter_pack
+https://en.cppreference.com/w/cpp/language/lambda
+take C style arrays as reference to a function without it decaying to a pointer
